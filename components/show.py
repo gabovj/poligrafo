@@ -560,64 +560,85 @@ def find_by_ID():
 def boolean_to_yes_no(value):
     return ':white_check_mark:' if value else ':x:'
     
+def create_paragraph(doc, text, alignment=WD_ALIGN_PARAGRAPH.JUSTIFY, underline=False):
+    paragraph = doc.add_paragraph()
+    paragraph.alignment = alignment
+    run = paragraph.add_run(text)
+    if underline:
+        run.underline = True
+    return paragraph
+
 def create_docx(variables):
+    print(variables)
+    col1, col2 = st.columns(2)
+    with col1:
+        hiring_company = st.text_input('Empresa a presentar los resultados')
+    with col2:
+        key_poligraphist = st.text_input('Clave poligrafista')
+
     # Mapping of month numbers to Spanish month names
-    spanish_months = {
-        1: 'Enero', 2: 'Febrero', 3: 'Marzo',
-        4: 'Abril', 5: 'Mayo', 6: 'Junio',
-        7: 'Julio', 8: 'Agosto', 9: 'Septiembre',
-        10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
-    }
+    spanish_months = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'}
+
     # Create a new Document
     doc = Document()
     # Set the default font to Arial
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Arial'
-    font.size = Pt(11)
+    font.size = Pt(10)
 
     # Add a logo to the header
-    header = doc.sections[0].header
-    header_paragraph = header.paragraphs[0]
-    header_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run = header_paragraph.add_run()
-    run.add_picture("test_logo.png", width=Inches(1.0))
+    try:
+        header = doc.sections[0].header
+        header_paragraph = header.paragraphs[0]
+        header_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        header_paragraph.add_run().add_picture("test_logo.png", width=Inches(1.0))
+    except FileNotFoundError:
+        print("Logo file not found.")
+
     # Add and center the heading
     heading = doc.add_heading("AUTORIZACIÓN Y LIBERACIÓN DEL EXAMEN DE POLÍGRAFO", level=1)
     heading.style = doc.styles['Heading 1']
     heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    # Modify the heading font separately if needed
+    # Modify the heading font
     heading_font = heading.style.font
     heading_font.name = 'Arial'  # Ensure heading also uses Arial
-    # heading_font.size = Pt(12)  # Uncomment to set a specific size for headings
-    # Add a paragraph for the date, align it to the right
-    date_paragraph = doc.add_paragraph()
-    date_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    # First underlined part 'Puebla, Puebla'
-    underlined_run1 = date_paragraph.add_run('Puebla, Puebla ')
-    underlined_run1.underline = True
-    # Regular text
-    regular_run = date_paragraph.add_run('a ')
-     # Use the datetime object directly
-    datetime_object = variables['timestamp']
-    # Extracting the day from the timestamp and underlining it
-    day = datetime_object.day
-    underlined_run_day = date_paragraph.add_run(str(day))
-    underlined_run_day.underline = True
-    # Regular text
-    regular_run2 = date_paragraph.add_run(' de ')
-    # Extracting the month in Spanish and underlining it
-    month = spanish_months[datetime_object.month]
-    underlined_run_month = date_paragraph.add_run(month)
-    underlined_run_month.underline = True
-    # Regular text
-    regular_run3 = date_paragraph.add_run(' de ')
-    # Extracting the year as an integer and underlining it
-    year = datetime_object.year
-    underlined_run_year = date_paragraph.add_run(str(year))
-    underlined_run_year.underline = True
+    heading_font.size = Pt(13)   # Set font size to 13 points
 
-    # Add more content and formatting as needed
+    # Date paragraph
+    datetime_object = variables.get('timestamp', None)
+    if datetime_object:
+        date_text = f'Puebla, Puebla a {datetime_object.day} de {spanish_months[datetime_object.month]} de {datetime_object.year}'
+        create_paragraph(doc, date_text, WD_ALIGN_PARAGRAPH.RIGHT, underline=True)
+
+    # Adding paragraphs
+    texts = [
+        f"Yo {variables.get('name', 'N/A')} con número de identificación XXX.",
+        "Por la presente autorizo al profesional, quien es examinador de polígrafo calificado, para administrarme un examen de polígrafo en la fecha indicada. Además, entiendo que puedo cancelar los procedimientos de evaluación en cualquier momento, y que será detenido el examen o entrevista si lo deseo.",
+        "Estoy de acuerdo en tomar este examen, sin ninguna promesa de recompensa de cualquier tipo; incluida la alteración u omisión del resultado o información producto de la evaluación.",
+        "Entiendo que con base a cómo yo genere los datos de la prueba del polígrafo, la opinión experta del examinador puede ser: que he sido del todo veraz o no; y que he cooperado o no completamente con los procedimientos de la prueba.",
+        "Tengo salud física y mental adecuada (estable) para completar esta examinación.",
+        "Entiendo que el equipo de examinación y los principios fisiológicos de la prueba, se explicarán a mi satisfacción antes de comenzar el examen.",
+        "Entiendo que todas las preguntas que se me harán durante el examen serán leídas y revisadas conmigo antes de comenzar la prueba, y que voy a tener la oportunidad de pedir una aclaración antes de empezar con el mismo.",
+        "Registro de examinación: Audio - Video",
+        f"Autorizo la entrega de resultados y la información de este examen, de manera: oral, escrita y electrónica; incluyendo el contenido del video y audio grabado de entrevista; los resultados, informe sumario y opiniones a: {hiring_company}",
+        f"Yo, en pleno uso de mis facultades, entiendo que esta prueba la realizo por mi propia voluntad ya que autoricé todos los procedimientos por escrito, se me explicó que los instrumentos van a ser colocados sobre mi cuerpo y que ninguno de estos produce daño. Por lo tanto, eximo de toda responsabilidad civil y penal en contra de; el poligrafista con clave: {key_poligraphist}; la empresa a la que pertenece éste y la empresa solicitante, de mi evaluación ya que no me han obligado a presentar la prueba poligráfica además de tener conocimiento que en cualquier momento puedo abandonar este lugar y con ello no se violentan mis garantías individuales ni mis derechos constitucionales."
+    ]
+
+    for text in texts:
+        create_paragraph(doc, text)
+
+    # Define the footer text
+    footer_text = (
+        "INFORMACIÓN CONFIDENCIAL. El presente documento fue elaborado a petición del cliente, realizado mediante los estándares establecidos por la Asociación Mexicana de Poligrafía, el proceso fue video grabado para fines de control de calidad, utilizo un instrumento digital de poligrafía para la información. Quien ha aceptado que toda información contenida en el mismo es confidencial y de su interés exclusivo y privado. Cualquier uso distinto al descrito, ya sea comunicación verbal, publicación o reproducción total o parcial sin la aprobación escrita del Centro Especializado en Poligrafía e investigación Estratégica queda estrictamente prohibido. A sí mismo el cliente acepta de conformidad la responsabilidad imputable ocasionada por el uso indebido de este documento."
+    )
+
+    # Add a footer to the document
+    footer = doc.sections[0].footer
+    footer_paragraph = footer.paragraphs[0]
+    footer_paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY  # Justify align the footer text
+    run = footer_paragraph.add_run(footer_text)
+    run.font.size = Pt(5)
 
     # Save the document to a BytesIO object
     file_stream = BytesIO()
@@ -625,3 +646,4 @@ def create_docx(variables):
     file_stream.seek(0)
 
     return file_stream
+
