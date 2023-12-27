@@ -543,15 +543,7 @@ def find_by_ID():
                         st.write(f'{question} :orange[{existing_data[key]}]')
                     else:
                         st.write(f'{question} :red[NO DATA]')
-  
-            docx_file = create_docx(existing_data)
-            # Use the Streamlit download button to enable file download
-            st.download_button(
-                label="Download Document",
-                data=docx_file,
-                file_name="custom_document.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
+            
         else:
             st.error('No se encontraron datos para el folio proporcionado.')
         
@@ -560,22 +552,23 @@ def find_by_ID():
 def boolean_to_yes_no(value):
     return ':white_check_mark:' if value else ':x:'
     
-def create_paragraph(doc, text, alignment=WD_ALIGN_PARAGRAPH.JUSTIFY, underline=False):
+def create_paragraph(doc, text_parts, alignment=WD_ALIGN_PARAGRAPH.JUSTIFY):
     paragraph = doc.add_paragraph()
     paragraph.alignment = alignment
-    run = paragraph.add_run(text)
-    if underline:
-        run.underline = True
+
+    for text, underline in text_parts:
+        run = paragraph.add_run(text)
+        if underline:
+            run.underline = True
+
+    paragraph_format = paragraph.paragraph_format
+    paragraph_format.space_before = Pt(0)
+    paragraph_format.space_after = Pt(0)
+
     return paragraph
 
 def create_docx(variables):
     print(variables)
-    col1, col2 = st.columns(2)
-    with col1:
-        hiring_company = st.text_input('Empresa a presentar los resultados')
-    with col2:
-        key_poligraphist = st.text_input('Clave poligrafista')
-
     # Mapping of month numbers to Spanish month names
     spanish_months = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'}
 
@@ -609,36 +602,34 @@ def create_docx(variables):
     datetime_object = variables.get('timestamp', None)
     if datetime_object:
         date_text = f'Puebla, Puebla a {datetime_object.day} de {spanish_months[datetime_object.month]} de {datetime_object.year}'
-        create_paragraph(doc, date_text, WD_ALIGN_PARAGRAPH.RIGHT, underline=True)
+        create_paragraph(doc, [(date_text, True)], WD_ALIGN_PARAGRAPH.RIGHT)
 
-    # Adding paragraphs
+     # Adding paragraphs with specific underlined parts
+    name = variables.get('name', 'N/A')  
+    hiring_company = variables.get('hiring_company', 'N/A')  
+    key_poligraphist = variables.get('key_poligraphist', 'N/A')  
     texts = [
-        f"Yo {variables.get('name', 'N/A')} con número de identificación XXX.",
-        "Por la presente autorizo al profesional, quien es examinador de polígrafo calificado, para administrarme un examen de polígrafo en la fecha indicada. Además, entiendo que puedo cancelar los procedimientos de evaluación en cualquier momento, y que será detenido el examen o entrevista si lo deseo.",
-        "Estoy de acuerdo en tomar este examen, sin ninguna promesa de recompensa de cualquier tipo; incluida la alteración u omisión del resultado o información producto de la evaluación.",
-        "Entiendo que con base a cómo yo genere los datos de la prueba del polígrafo, la opinión experta del examinador puede ser: que he sido del todo veraz o no; y que he cooperado o no completamente con los procedimientos de la prueba.",
-        "Tengo salud física y mental adecuada (estable) para completar esta examinación.",
-        "Entiendo que el equipo de examinación y los principios fisiológicos de la prueba, se explicarán a mi satisfacción antes de comenzar el examen.",
-        "Entiendo que todas las preguntas que se me harán durante el examen serán leídas y revisadas conmigo antes de comenzar la prueba, y que voy a tener la oportunidad de pedir una aclaración antes de empezar con el mismo.",
-        "Registro de examinación: Audio - Video",
-        f"Autorizo la entrega de resultados y la información de este examen, de manera: oral, escrita y electrónica; incluyendo el contenido del video y audio grabado de entrevista; los resultados, informe sumario y opiniones a: {hiring_company}",
-        f"Yo, en pleno uso de mis facultades, entiendo que esta prueba la realizo por mi propia voluntad ya que autoricé todos los procedimientos por escrito, se me explicó que los instrumentos van a ser colocados sobre mi cuerpo y que ninguno de estos produce daño. Por lo tanto, eximo de toda responsabilidad civil y penal en contra de; el poligrafista con clave: {key_poligraphist}; la empresa a la que pertenece éste y la empresa solicitante, de mi evaluación ya que no me han obligado a presentar la prueba poligráfica además de tener conocimiento que en cualquier momento puedo abandonar este lugar y con ello no se violentan mis garantías individuales ni mis derechos constitucionales."
+        [("Yo ", False), (name, True), (" con número de identificación XXX.", False)],
+        [("Por la presente autorizo al profesional, quien es examinador de polígrafo calificado, para administrarme un examen de polígrafo en la fecha indicada. Además, entiendo que puedo cancelar los procedimientos de evaluación en cualquier momento, y que será detenido el examen o entrevista si lo deseo.", False)],
+        [("Estoy de acuerdo en tomar este examen, sin ninguna promesa de recompensa de cualquier tipo; incluida la alteración u omisión del resultado o información producto de la evaluación.", False)],
+        [("Entiendo que con base a cómo yo genere los datos de la prueba del polígrafo, la opinión experta del examinador puede ser: que he sido del todo veraz o no; y que he cooperado o no completamente con los procedimientos de la prueba.", False)],
+        [("Tengo salud física y mental adecuada (estable) para completar esta examinación.", False)],
+        [("Entiendo que el equipo de examinación y los principios fisiológicos de la prueba, se explicarán a mi satisfacción antes de comenzar el examen.", False)],
+        [("Entiendo que todas las preguntas que se me harán durante el examen serán leídas y revisadas conmigo antes de comenzar la prueba, y que voy a tener la oportunidad de pedir una aclaración antes de empezar con el mismo.", False)],
+        [("Registro de examinación: Audio - Video", False)],
+        [("Autorizo la entrega de resultados y la información de este examen, de manera: oral, escrita y electrónica; incluyendo el contenido del video y audio grabado de entrevista; los resultados, informe sumario y opiniones a: ", False), (hiring_company, True)],
+        [("Yo, en pleno uso de mis facultades, entiendo que esta prueba la realizo por mi propia voluntad ya que autoricé todos los procedimientos por escrito, se me explicó que los instrumentos van a ser colocados sobre mi cuerpo y que ninguno de estos produce daño. Por lo tanto, eximo de toda responsabilidad civil y penal en contra de; el poligrafista con clave: ", False), (key_poligraphist, True), ("; la empresa a la que pertenece éste y la empresa solicitante, de mi evaluación ya que no me han obligado a presentar la prueba poligráfica además de tener conocimiento que en cualquier momento puedo abandonar este lugar y con ello no se violentan mis garantías individuales ni mis derechos constitucionales.", False)]
     ]
 
-    for text in texts:
-        create_paragraph(doc, text)
+    for text_parts in texts:
+        create_paragraph(doc, text_parts)
 
-    # Define the footer text
-    footer_text = (
-        "INFORMACIÓN CONFIDENCIAL. El presente documento fue elaborado a petición del cliente, realizado mediante los estándares establecidos por la Asociación Mexicana de Poligrafía, el proceso fue video grabado para fines de control de calidad, utilizo un instrumento digital de poligrafía para la información. Quien ha aceptado que toda información contenida en el mismo es confidencial y de su interés exclusivo y privado. Cualquier uso distinto al descrito, ya sea comunicación verbal, publicación o reproducción total o parcial sin la aprobación escrita del Centro Especializado en Poligrafía e investigación Estratégica queda estrictamente prohibido. A sí mismo el cliente acepta de conformidad la responsabilidad imputable ocasionada por el uso indebido de este documento."
-    )
-
-    # Add a footer to the document
+    # Footer
+    footer_text = "INFORMACIÓN CONFIDENCIAL. El presente documento fue elaborado a petición del cliente, realizado mediante los estándares establecidos por la Asociación Mexicana de Poligrafía, el proceso fue video grabado para fines de control de calidad, utilizo un instrumento digital de poligrafía para la información. Quien ha aceptado que toda información contenida en el mismo es confidencial y de su interés exclusivo y privado. Cualquier uso distinto al descrito, ya sea comunicación verbal, publicación o reproducción total o parcial sin la aprobación escrita del Centro Especializado en Poligrafía e investigación Estratégica queda estrictamente prohibido. A sí mismo el cliente acepta de conformidad la responsabilidad imputable ocasionada por el uso indebido de este documento."
     footer = doc.sections[0].footer
     footer_paragraph = footer.paragraphs[0]
-    footer_paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY  # Justify align the footer text
-    run = footer_paragraph.add_run(footer_text)
-    run.font.size = Pt(5)
+    footer_paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    footer_paragraph.add_run(footer_text).font.size = Pt(5)
 
     # Save the document to a BytesIO object
     file_stream = BytesIO()
