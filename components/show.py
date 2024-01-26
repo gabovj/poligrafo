@@ -585,7 +585,7 @@ def create_docx(variables):
         header = doc.sections[0].header
         header_paragraph = header.paragraphs[0]
         header_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        header_paragraph.add_run().add_picture("test_logo.png", width=Inches(1.0))
+        header_paragraph.add_run().add_picture("test_logo.png", width=Inches(2.2))
     except FileNotFoundError:
         print("Logo file not found.")
 

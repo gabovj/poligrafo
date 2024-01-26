@@ -242,7 +242,7 @@ logout_link = f"{COGNITO_DOMAIN}/logout?client_id={CLIENT_ID}&logout_uri={APP_UR
 html_css_login = """
 <style>
 .button-login {
-  background-color: orange;
+  background-color: #E56144;
   color: white !important;
   padding: 1em 1.5em;
   text-decoration: none;
@@ -265,11 +265,11 @@ html_css_login = """
 
 html_button_login = (
     html_css_login
-    + f"<a href='{login_link}' class='button-login' target='_blank'>Log In</a>"
+    + f"<a href='{login_link}' class='button-login' target='_blank'>Iniciar Sesión</a>"
 )
 html_button_logout = (
     html_css_login
-    + f"<a href='{logout_link}' class='button-login' target='_blank'>Log Out</a>"
+    + f"<a href='{logout_link}' class='button-login' target='_blank'>Cerrar Sesión</a>"
 )
 
 # html_button_login = (
