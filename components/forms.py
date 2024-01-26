@@ -84,7 +84,7 @@ def datos_generales():
                 nombre = st.text_input('Nombre', value=prefill_data.get('name', ''), placeholder='Ingresa tu nombre completo')
             with col2:
                 lugar_nacimiento = st.text_input('Lugar de Nacimiento', value=prefill_data.get('birth_place', ''), placeholder='Ingresa tu ciudad de nacimiento')
-            
+            id_number = st.text_input('Número de identificación', value=prefill_data.get('id_number', ''), placeholder='Ingresa el numero de tu identificación oficial')
             col1, col2, col3 = st.columns(3)
             with col1:
                 dob_str = prefill_data.get('dob', None)
@@ -142,6 +142,7 @@ def datos_generales():
                         '$set': {
                         'name': nombre,
                         'birth_place': lugar_nacimiento,
+                        'id_number': id_number,
                         'dob': dob_str,
                         'age': edad,
                         'marriage_status': estado_civil,

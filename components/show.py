@@ -590,7 +590,7 @@ def create_docx(variables):
         print("Logo file not found.")
 
     # Add and center the heading
-    heading = doc.add_heading("AUTORIZACIÓN Y LIBERACIÓN DEL EXAMEN DE POLÍGRAFO", level=1)
+    heading = doc.add_heading("AUTORIZACIÓN Y LIBERACIÓN DEL EXÁMEN DE POLÍGRAFO", level=1)
     heading.style = doc.styles['Heading 1']
     heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
     # Modify the heading font
@@ -605,11 +605,12 @@ def create_docx(variables):
         create_paragraph(doc, [(date_text, True)], WD_ALIGN_PARAGRAPH.RIGHT)
 
      # Adding paragraphs with specific underlined parts
-    name = variables.get('name', 'N/A')  
+    name = variables.get('name', 'N/A')
+    id_number = variables.get('id_number','N/A')  
     hiring_company = variables.get('hiring_company', 'N/A')  
     key_poligraphist = variables.get('key_poligraphist', 'N/A')  
     texts = [
-        [("Yo ", False), (name, True), (" con número de identificación XXX.", False)],
+        [("Yo ", False), (name, True), (" con número de identificación: ", False),(id_number, True)],
         [("Por la presente autorizo al profesional, quien es examinador de polígrafo calificado, para administrarme un examen de polígrafo en la fecha indicada. Además, entiendo que puedo cancelar los procedimientos de evaluación en cualquier momento, y que será detenido el examen o entrevista si lo deseo.", False)],
         [("Estoy de acuerdo en tomar este examen, sin ninguna promesa de recompensa de cualquier tipo; incluida la alteración u omisión del resultado o información producto de la evaluación.", False)],
         [("Entiendo que con base a cómo yo genere los datos de la prueba del polígrafo, la opinión experta del examinador puede ser: que he sido del todo veraz o no; y que he cooperado o no completamente con los procedimientos de la prueba.", False)],
@@ -623,6 +624,47 @@ def create_docx(variables):
 
     for text_parts in texts:
         create_paragraph(doc, text_parts)
+
+    # Add 3 empty lines
+    for _ in range(3):
+        doc.add_paragraph()
+
+    # Add a table for signatures
+    signature_table = doc.add_table(rows=1, cols=2)
+    signature_table.autofit = False
+
+    # Set column widths - Adjust these values as needed
+    signature_table.columns[0].width = Inches(3.25)
+    signature_table.columns[1].width = Inches(3.25)
+
+    # Add underlined spaces for signatures in each cell
+    signature_line = '_ ' * 15  # Adjust as necessary for signature line length
+    cell_left = signature_table.cell(0, 0)
+    cell_right = signature_table.cell(0, 1)
+
+    cell_left_paragraph = cell_left.paragraphs[0]
+    cell_right_paragraph = cell_right.paragraphs[0]
+
+    # Add signature line and text for the left cell
+    cell_left_paragraph.add_run(signature_line).underline = True
+    cell_left_paragraph.add_run("\nFIRMA DEL EVALUADO")  # New line and text
+
+    # Add signature line and text for the right cell
+    cell_right_paragraph.add_run(signature_line).underline = True
+    cell_right_paragraph.add_run("\nFIRMA DEL POLIGRAFISTA")  # New line and text
+
+    # Align the text in the cells
+    cell_left_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    cell_right_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    # Add 2 empty lines
+    for _ in range(2):
+        doc.add_paragraph()
+
+    # Add the current time above the footer
+    current_time = datetime.now().strftime("%H:%M")
+    time_paragraph = doc.add_paragraph(f"Hora de inicio: {current_time}")
+    time_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
     # Footer
     footer_text = "INFORMACIÓN CONFIDENCIAL. El presente documento fue elaborado a petición del cliente, realizado mediante los estándares establecidos por la Asociación Mexicana de Poligrafía, el proceso fue video grabado para fines de control de calidad, utilizo un instrumento digital de poligrafía para la información. Quien ha aceptado que toda información contenida en el mismo es confidencial y de su interés exclusivo y privado. Cualquier uso distinto al descrito, ya sea comunicación verbal, publicación o reproducción total o parcial sin la aprobación escrita del Centro Especializado en Poligrafía e investigación Estratégica queda estrictamente prohibido. A sí mismo el cliente acepta de conformidad la responsabilidad imputable ocasionada por el uso indebido de este documento."
