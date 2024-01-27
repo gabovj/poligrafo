@@ -47,6 +47,7 @@ if st.session_state["authenticated"]:
     with st.expander('#### :orange[Discusión y Desarrollo]'):
         preguntas.discusion_desarrollo()
 else:
+    st.image("test_logo.png")
     st.write("# Por favor inicia sesión")
     # st.write(st.session_state)
     with st.sidebar:
