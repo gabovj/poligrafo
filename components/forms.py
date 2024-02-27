@@ -168,15 +168,12 @@ def datos_generales():
                     st.error(f"An error occurred: {e}")
 
 def datos_laborales():
-    # Try to retrieve existing data for the user
+    # Similar setup as before
     if 'folio' in st.session_state:
         existing_data = collection.find_one({"folio": st.session_state['folio']})
-        # If existing data is found, use it to pre-fill the form; otherwise, use default values
         prefill_data = existing_data if existing_data else {}
-        
-        # show_datos_laborales()
+
         with st.form(key='datos_laborales'):
-            # st.title(':orange[Datos Laborales]')
             folio_from_db = prefill_data.get('folio', '')
             name_from_db = prefill_data.get('name', '')
             st.write(f':red[folio:] {folio_from_db}')
@@ -186,28 +183,35 @@ def datos_laborales():
                 company_name = st.text_input('Empresa', placeholder='Ingresa el nombre de la empresa')
             with col2:
                 position = st.text_input('Puesto', placeholder='Ingresa el nombre del puesto')
-            
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             with col1:
-                start_date = st.date_input('Fecha de ingreso', value=None, format="DD/MM/YYYY", min_value=datetime(1920, 1, 1))
+                start_year = st.number_input('Año de ingreso (Modifica el año)', min_value=1920, max_value=datetime.now().year, format="%d")
+                end_year = st.number_input('Año de salida (Modifica el año)', min_value=1920, max_value=datetime.now().year, format="%d")
             with col2:
-                end_date = st.date_input('Fecha de salida', value=None, format="DD/MM/YYYY", min_value=datetime(1920, 1, 1))
-            with col3:
-                monthly_salary = st.text_input('Salario', placeholder='Ingresa tu salario mensual')
-
+                # Dictionary to map month numbers to Spanish month names
+                months_es = {
+                    1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+                    5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+                    9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+                }
+                start_month = st.selectbox('Mes de ingreso (Selecciona el mes)', range(1, 13), format_func=lambda x: months_es[x])
+                end_month = st.selectbox('Mes de salida (selecciona el mes)', range(1, 13), format_func=lambda x: months_es[x])
+            monthly_salary = st.text_input('Salario', placeholder='Ingresa tu salario mensual')
             reason_exit = st.text_area('Motivo de salida', placeholder='Detalla el motivo por el cual dejaste de laborar en esta empresa')
             best_job_experience = st.text_area('Mejor experiencia o aprendizaje laboral', placeholder='Detalla tu mejor experiencia laboral en esta empresa')
             worst_job_experience = st.text_area('Mala experiencia o aprendizaje laboral', placeholder='Detalla una mala experiencia laboral en esta empresa')
             job_duties = st.text_area('Cuáles eran tus actividades', placeholder='Describe tus actividades laborales en esta empresa')
-
             submit_datos_laborales = st.form_submit_button(':orange[Guardar Experiencia Laboral]')
             if submit_datos_laborales:
+                # Convert the year and month to a date string or object
+                start_date = datetime(year=start_year, month=start_month, day=1).isoformat()
+                end_date = datetime(year=end_year, month=end_month, day=1).isoformat()
                 # Create the 'work_experience' object
                 work_experience = {
                     'company_name': company_name,
                     'position': position,
-                    'start_date': start_date.isoformat() if start_date is not None else None,
-                    'end_date': end_date.isoformat() if end_date is not None else None,
+                    'start_date': start_date,
+                    'end_date': end_date,
                     'monthly_salary': monthly_salary,
                     'reason_exit': reason_exit,
                     'best_job_experience': best_job_experience,
@@ -230,27 +234,21 @@ def show_datos_laborales():
     if 'folio' in st.session_state:
         existing_data = collection.find_one({"folio": st.session_state['folio']})
         prefill_data = existing_data if existing_data else {}
-        name_from_db = prefill_data.get('name', '')
         labor_data = existing_data.get("labor_data", [])
-        # name_db = company_data.get("company_name", "Unknown Company")
+        
         for index, labor in enumerate(labor_data, start=1):
-            # Use columns to layout labor details and delete button
-            col1, col2 = st.columns([0.8, 0.1])
+            col1, col2 = st.columns([0.8, 0.2])
             with col1:
-                # Display the labor details
-                st.markdown(f"**:orange[{index}-]** {labor.get('position', 'N/A')} :orange[/] {labor.get('company_name', 'N/A')}")
-                # st.divider()
+                st.markdown(f"**:office: {index} - {labor.get('position', 'N/A')} at {labor.get('company_name', 'N/A')}**")
                 
             with col2:
-                # Construct a unique key for the button based on the labor details
-                button_key = f"delete_{labor['position']}_{labor['company_name']}"
-                # Display the delete button next to the labor details with the unique key
+                # Use the index in the button key to ensure uniqueness
+                button_key = f"delete_{labor['position']}_{labor['company_name']}_{index}"
                 if st.button(":red[Borrar]", key=button_key):
                     delete_dato_laboral(labor)
-                    # Refresh the page to see the updated list
-                    st.rerun()
+                    st.experimental_rerun()
     else:
-        st.info(f"No labor data saved for {name_from_db}.")
+        st.info("No existe información laboral.")
 
 def delete_dato_laboral(work_experience):
     """

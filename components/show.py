@@ -200,7 +200,7 @@ def find_by_ID():
                         st.write(f'Resultados: :orange[{existing_data["polygraph_experiences_results"]}]')
                     else:
                         st.write('Resultados: :red[NO DATA]')
-           
+
             if 'labor_data' in existing_data:
                 with st.expander("#### :orange[Datos Laborales]"):
                     for labor in existing_data['labor_data']:
@@ -209,19 +209,35 @@ def find_by_ID():
                             st.write(f'Empresa: :orange[{labor["company_name"]}]')
                         with col2:
                             st.write(f'Puesto: :orange[{labor["position"]}]')
+
                         col1, col2, col3 = st.columns(3)
                         with col1:
                             start_date = labor['start_date']
-                            start_date_str = datetime.strptime(start_date, "%Y-%m-%d")
-                            formatted_start_date = start_date_str.strftime("%d-%b-%Y").upper()
+                            if start_date:  # Check if start_date is not empty
+                                try:
+                                    start_date_str = datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%S")
+                                    formatted_start_date = start_date_str.strftime("%d-%b-%Y").upper()
+                                except ValueError:
+                                    formatted_start_date = "Fecha no válida"
+                            else:
+                                formatted_start_date = "No proporcionado"
                             st.write(f'Ingreso: :orange[{formatted_start_date}]')
+
                         with col2:
-                            end_date = labor['end_date']
-                            end_date_str = datetime.strptime(end_date, "%Y-%m-%d")
-                            formatted_end_date = end_date_str.strftime("%d-%b-%Y").upper()
+                            end_date = labor.get('end_date', '')  # Use .get() to handle missing 'end_date' key
+                            if end_date:  # Check if end_date is not empty
+                                try:
+                                    end_date_str = datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%S")
+                                    formatted_end_date = end_date_str.strftime("%d-%b-%Y").upper()
+                                except ValueError:
+                                    formatted_end_date = "Fecha no válida"
+                            else:
+                                formatted_end_date = "No proporcionado"
                             st.write(f'Salida: :orange[{formatted_end_date}]')
+
                         with col3:
                             st.write(f'Salario Mensual: :orange[{labor["monthly_salary"]}]')
+
                         st.write(f'Motivo de Salida: :orange[{labor["reason_exit"]}]')
                         st.write(f'Mala experiencia: :orange[{labor["worst_job_experience"]}]')
                         job_duties_with_breaks = labor["job_duties"].replace("\n", "<br>")
